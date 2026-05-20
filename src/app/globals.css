@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Anton";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/anton/v25/1Ptgg87GROyAm3K9-C8.woff2")
+    format("woff2");
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --surface-primary: #ffffff;
+  --surface-dark: #1a1a1a;
+  --surface-card: #f5f5f5;
+  --foreground-primary: #1a1a1a;
+  --foreground-secondary: #666666;
+  --foreground-tertiary: #999999;
+  --foreground-muted: #aaaaaa;
+  --foreground-inverse: #ffffff;
+  --border-light: #e0e0e0;
+  --border-dark: #333333;
+  --accent: #c8a96e;
+
+  --font-heading: "Anton", sans-serif;
+  --font-body: var(--font-inter);
+  --font-caption: var(--font-geist-sans);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface-primary: var(--surface-primary);
+  --color-surface-dark: var(--surface-dark);
+  --color-surface-card: var(--surface-card);
+  --color-fg-primary: var(--foreground-primary);
+  --color-fg-secondary: var(--foreground-secondary);
+  --color-fg-tertiary: var(--foreground-tertiary);
+  --color-fg-muted: var(--foreground-muted);
+  --color-fg-inverse: var(--foreground-inverse);
+  --color-border-light: var(--border-light);
+  --color-border-dark: var(--border-dark);
+  --color-accent: var(--accent);
+  --font-heading: "Anton", sans-serif;
+  --font-body: var(--font-inter);
+  --font-caption: var(--font-geist-sans);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.section-px {
+  @apply px-5 md:px-8 lg:px-16;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--surface-primary);
+  color: var(--foreground-primary);
+  font-family: var(--font-body);
 }
