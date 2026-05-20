@@ -44,15 +44,13 @@ export default async function MembersPage() {
         {/* Top Members */}
         {topMembers.length > 0 && (
           <div className="mt-12 md:mt-16">
-            <h2 className="font-caption text-[11px] font-medium tracking-[1.5px] text-fg-secondary mb-4">
+            <h2 className="font-caption text-[11px] font-medium tracking-[1.5px] text-fg-secondary mb-5">
               TOP MEMBERS
             </h2>
-            <div className="max-w-[640px]">
-              <div className="divide-y divide-border-light">
-                {topMembers.map((member, i) => (
-                  <TopMemberItem key={member.user_id} member={member} rank={i + 1} />
-                ))}
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+              {topMembers.map((member, i) => (
+                <TopMemberItem key={member.user_id} member={member} rank={i + 1} />
+              ))}
             </div>
           </div>
         )}
