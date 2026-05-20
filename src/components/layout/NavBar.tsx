@@ -105,7 +105,7 @@ export default function NavBar() {
             </Link>
           )}
           <button
-            className="lg:hidden"
+            className="hidden md:block lg:hidden"
             aria-label="Menu"
             onClick={() => setMenuOpen(!menuOpen)}
           >

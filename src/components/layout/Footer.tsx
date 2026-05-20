@@ -27,7 +27,7 @@ function IconX() {
 export default function Footer() {
   return (
     <footer className="bg-surface-dark">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 section-px py-8 md:py-12">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 section-px py-8 pb-18 md:py-12 md:pb-12">
         <Image
           src="/images/logo-white.png"
           alt="MANDLE"
@@ -40,13 +40,13 @@ export default function Footer() {
           presence.
         </p>
         <div className="flex items-center gap-6 order-2 md:order-3">
-          <a href="#" aria-label="Instagram" className="text-fg-tertiary hover:text-fg-inverse transition-colors">
+          <a href="#" aria-label="Instagram" className="flex items-center justify-center w-10 h-10 text-fg-tertiary hover:text-fg-inverse transition-colors">
             <IconInstagram />
           </a>
-          <a href="#" aria-label="YouTube" className="text-fg-tertiary hover:text-fg-inverse transition-colors">
+          <a href="#" aria-label="YouTube" className="flex items-center justify-center w-10 h-10 text-fg-tertiary hover:text-fg-inverse transition-colors">
             <IconYoutube />
           </a>
-          <a href="#" aria-label="X" className="text-fg-tertiary hover:text-fg-inverse transition-colors">
+          <a href="#" aria-label="X" className="flex items-center justify-center w-10 h-10 text-fg-tertiary hover:text-fg-inverse transition-colors">
             <IconX />
           </a>
         </div>

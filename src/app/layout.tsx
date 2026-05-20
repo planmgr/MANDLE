@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Geist } from "next/font/google";
 import NavBar from "@/components/layout/NavBar";
 import Footer from "@/components/layout/Footer";
+import MobileTabBar from "@/components/layout/MobileTabBar";
 import "./globals.css";
 
 const inter = Inter({
@@ -40,10 +41,11 @@ export default function RootLayout({
       lang="ko"
       className={`${inter.variable} ${geist.variable} antialiased`}
     >
-      <body className="min-h-screen flex flex-col">
+      <body className="min-h-screen flex flex-col pb-14 md:pb-0">
         <NavBar />
         {children}
         <Footer />
+        <MobileTabBar />
       </body>
     </html>
   );
