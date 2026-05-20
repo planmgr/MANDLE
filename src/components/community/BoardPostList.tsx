@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import BoardPostCard from "./BoardPostCard";
 import BoardPostDetailModal from "./BoardPostDetailModal";
 import type { BoardPost } from "@/lib/types/community";
@@ -17,12 +17,14 @@ export default function BoardPostList({ initialPosts, currentUserId }: BoardPost
   const [loading, setLoading] = useState(false);
   const [selectedPost, setSelectedPost] = useState<BoardPost | null>(null);
   const observerRef = useRef<HTMLDivElement>(null);
+  const [prevInitialPosts, setPrevInitialPosts] = useState(initialPosts);
 
-  useEffect(() => {
+  if (prevInitialPosts !== initialPosts) {
+    setPrevInitialPosts(initialPosts);
     setPosts(initialPosts);
     setPage(2);
     setHasMore(initialPosts.length >= 15);
-  }, [initialPosts]);
+  }
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;

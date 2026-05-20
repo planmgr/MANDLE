@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import PostCard from "./PostCard";
 import PostDetailModal from "./PostDetailModal";
 import type { Post, FeedTab } from "@/lib/types/community";
@@ -19,13 +19,15 @@ export default function PostGrid({ initialPosts, currentUserId, tab, tag }: Post
   const [loading, setLoading] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const observerRef = useRef<HTMLDivElement>(null);
+  const [prevInitialPosts, setPrevInitialPosts] = useState(initialPosts);
 
-  // Reset when tab/tag changes
-  useEffect(() => {
+  // Reset when tab/tag changes (render-time sync)
+  if (prevInitialPosts !== initialPosts) {
+    setPrevInitialPosts(initialPosts);
     setPosts(initialPosts);
     setPage(2);
     setHasMore(initialPosts.length >= 12);
-  }, [initialPosts]);
+  }
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;

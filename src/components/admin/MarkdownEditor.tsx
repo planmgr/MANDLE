@@ -82,16 +82,21 @@ export default function MarkdownEditor({
     e.target.value = "";
   };
 
-  const tools = [
-    { icon: Bold, action: () => insertText("**", "**"), label: "Bold" },
-    { icon: Italic, action: () => insertText("*", "*"), label: "Italic" },
-    { icon: Heading2, action: () => insertText("\n## "), label: "H2" },
-    { icon: Heading3, action: () => insertText("\n### "), label: "H3" },
-    { icon: List, action: () => insertText("\n- "), label: "List" },
-    { icon: ListOrdered, action: () => insertText("\n1. "), label: "Numbered" },
-    { icon: Quote, action: () => insertText("\n> "), label: "Quote" },
-    { icon: Minus, action: () => insertText("\n---\n"), label: "Divider" },
-    { icon: LinkIcon, action: () => insertText("[", "](url)"), label: "Link" },
+  const tools: Array<{
+    icon: typeof Bold;
+    label: string;
+    before: string;
+    after?: string;
+  }> = [
+    { icon: Bold, label: "Bold", before: "**", after: "**" },
+    { icon: Italic, label: "Italic", before: "*", after: "*" },
+    { icon: Heading2, label: "H2", before: "\n## " },
+    { icon: Heading3, label: "H3", before: "\n### " },
+    { icon: List, label: "List", before: "\n- " },
+    { icon: ListOrdered, label: "Numbered", before: "\n1. " },
+    { icon: Quote, label: "Quote", before: "\n> " },
+    { icon: Minus, label: "Divider", before: "\n---\n" },
+    { icon: LinkIcon, label: "Link", before: "[", after: "](url)" },
   ];
 
   return (
@@ -105,7 +110,7 @@ export default function MarkdownEditor({
           <button
             key={tool.label}
             type="button"
-            onClick={tool.action}
+            onClick={() => insertText(tool.before, tool.after)}
             title={tool.label}
             className="p-1.5 text-fg-secondary hover:text-fg-primary hover:bg-white transition-colors"
           >

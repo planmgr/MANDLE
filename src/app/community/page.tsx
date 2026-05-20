@@ -1,5 +1,15 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "COMMUNITY — MANDLE",
+  description: "스타일을 공유하고, 영감을 나누는 공간. MANDLE 커뮤니티에서 멤버들과 소통하세요.",
+  openGraph: {
+    title: "COMMUNITY — MANDLE",
+    description: "스타일을 공유하고, 영감을 나누는 공간.",
+  },
+};
 import {
   getFeedPosts,
   getPopularPosts,

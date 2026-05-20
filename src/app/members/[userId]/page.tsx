@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
@@ -11,6 +12,33 @@ import PostGrid from "@/components/community/PostGrid";
 
 interface MemberDetailPageProps {
   params: Promise<{ userId: string }>;
+}
+
+export async function generateMetadata({ params }: MemberDetailPageProps): Promise<Metadata> {
+  const { userId } = await params;
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("nickname, bio, avatar_url")
+    .eq("id", userId)
+    .single();
+
+  if (!profile) return { title: "MEMBERS — MANDLE" };
+
+  const featuredMember = await getFeaturedMemberByUserId(userId);
+  const description = profile.bio || featuredMember?.tagline || `${profile.nickname}님의 MANDLE 프로필`;
+  const image = featuredMember?.cover_image_url || profile.avatar_url;
+
+  return {
+    title: `${profile.nickname} — MANDLE`,
+    description,
+    openGraph: {
+      title: `${profile.nickname} — MANDLE`,
+      description,
+      ...(image && { images: [image] }),
+      type: "profile",
+    },
+  };
 }
 
 export default async function MemberDetailPage({ params }: MemberDetailPageProps) {

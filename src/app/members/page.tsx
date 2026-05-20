@@ -1,7 +1,17 @@
+import type { Metadata } from "next";
 import { getFeaturedMembers, getTopMembers } from "@/lib/queries/community";
 import PageHeader from "@/components/ui/PageHeader";
 import FeaturedMemberCard from "@/components/members/FeaturedMemberCard";
 import TopMemberItem from "@/components/members/TopMemberItem";
+
+export const metadata: Metadata = {
+  title: "MEMBERS — MANDLE",
+  description: "MANDLE을 빛내는 멤버들을 만나보세요. 피처드 멤버 인터뷰와 탑 멤버 랭킹.",
+  openGraph: {
+    title: "MEMBERS — MANDLE",
+    description: "MANDLE을 빛내는 멤버들을 만나보세요.",
+  },
+};
 
 export default async function MembersPage() {
   const [featuredMembers, topMembers] = await Promise.all([

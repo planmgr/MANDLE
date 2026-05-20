@@ -1,3 +1,14 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "SHOP — MANDLE",
+  description: "룩 기반 큐레이션 커머스. 스타일 기반 쇼핑 경험을 가장 먼저 만나보세요.",
+  openGraph: {
+    title: "SHOP — MANDLE",
+    description: "룩 기반 큐레이션 커머스가 곧 오픈합니다.",
+  },
+};
+
 export default function ShopPage() {
   return (
       <main className="flex-1 flex flex-col items-center justify-center bg-surface-dark px-5 md:px-8 lg:px-16 py-24 md:py-32">

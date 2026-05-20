@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { getUserStats, getUserPosts, getBookmarkedPosts } from "@/lib/queries/community";
 import PostGrid from "@/components/community/PostGrid";
 import ProfileHeader from "@/components/community/ProfileHeader";
+
+export const metadata: Metadata = {
+  title: "MY PAGE — MANDLE",
+  robots: { index: false, follow: false },
+};
 
 interface MyPageProps {
   searchParams: Promise<{ tab?: string }>;

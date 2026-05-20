@@ -1,7 +1,17 @@
+import type { Metadata } from "next";
 import PageHeader from "@/components/ui/PageHeader";
 import GroomingArticleCard from "@/components/grooming/GroomingArticleCard";
 import GroomingCategoryTabs from "@/components/grooming/GroomingCategoryTabs";
 import { getGroomingArticles } from "@/lib/queries/grooming";
+
+export const metadata: Metadata = {
+  title: "GROOMING — MANDLE",
+  description: "두피 케어, 수염 관리, 피트니스 — 자기관리의 모든 것. 스킨헤드를 위한 그루밍 가이드.",
+  openGraph: {
+    title: "GROOMING — MANDLE",
+    description: "두피 케어, 수염 관리, 피트니스 — 자기관리의 모든 것.",
+  },
+};
 
 interface GroomingPageProps {
   searchParams: Promise<{ category?: string }>;

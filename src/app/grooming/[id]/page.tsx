@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,6 +8,25 @@ import MarkdownRenderer from "@/components/ui/MarkdownRenderer";
 
 interface GroomingDetailPageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: GroomingDetailPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const article = await getGroomingArticleById(Number(id));
+  if (!article) return { title: "GROOMING — MANDLE" };
+
+  const description = article.summary || article.body.replace(/[#*>\-|`\n]/g, " ").slice(0, 160).trim();
+
+  return {
+    title: `${article.title} — MANDLE`,
+    description,
+    openGraph: {
+      title: article.title,
+      description,
+      images: [article.cover_image_url],
+      type: "article",
+    },
+  };
 }
 
 export default async function GroomingDetailPage({ params }: GroomingDetailPageProps) {

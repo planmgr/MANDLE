@@ -1,7 +1,17 @@
+import type { Metadata } from "next";
 import PageHeader from "@/components/ui/PageHeader";
 import StyleArticleCard from "@/components/style/StyleArticleCard";
 import StyleCategoryTabs from "@/components/style/StyleCategoryFilter";
 import { getStyleArticles } from "@/lib/queries/style";
+
+export const metadata: Metadata = {
+  title: "STYLE — MANDLE",
+  description: "카테고리별 스타일을 탐색하고, 나만의 무드를 찾아보세요. 미니멀, 스트릿, 젠틀맨 등 다양한 스타일 가이드.",
+  openGraph: {
+    title: "STYLE — MANDLE",
+    description: "카테고리별 스타일을 탐색하고, 나만의 무드를 찾아보세요.",
+  },
+};
 
 interface StylePageProps {
   searchParams: Promise<{ category?: string }>;
