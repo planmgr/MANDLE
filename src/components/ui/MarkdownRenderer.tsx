@@ -39,7 +39,7 @@ const components: Components = {
       <img
         src={src}
         alt={alt ?? ""}
-        className="w-full h-auto object-cover"
+        className="block w-full h-auto"
         loading="lazy"
       />
       {alt && (

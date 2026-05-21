@@ -83,7 +83,7 @@ export default async function GroomingDetailPage({ params }: GroomingDetailPageP
 
       {/* Body */}
       <section className="section-px py-8 md:py-12">
-        <article className="max-w-[720px] mx-auto">
+        <article className="max-w-[960px] mx-auto">
           {article.summary && (
             <p className="font-body text-[16px] md:text-[18px] text-fg-secondary leading-[1.8] italic mb-8 pb-8 border-b border-border-light">
               {article.summary}
@@ -92,7 +92,7 @@ export default async function GroomingDetailPage({ params }: GroomingDetailPageP
           <MarkdownRenderer content={article.body} />
         </article>
 
-        <div className="mt-10 pt-8 border-t border-border-light max-w-[720px] mx-auto">
+        <div className="mt-10 pt-8 border-t border-border-light max-w-[960px] mx-auto">
           <Link
             href={`/grooming?category=${article.category}`}
             className="font-caption text-[11px] font-medium tracking-[1.5px] text-fg-secondary hover:text-fg-primary transition-colors"
