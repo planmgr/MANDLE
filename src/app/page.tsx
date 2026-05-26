@@ -2,18 +2,19 @@ import FounderSection from "@/components/sections/FounderSection";
 import EditorialSection from "@/components/sections/EditorialSection";
 import FeaturedUsers from "@/components/sections/FeaturedUsers";
 import GroomingSection from "@/components/sections/TrendingNow";
-import LookbookSection from "@/components/sections/LookbookSection";
-import { getFeaturedStyleArticles, getStyleArticles } from "@/lib/queries/style";
+import CommunityBoardSection from "@/components/sections/CommunityBoardSection";
+import { getFeaturedStyleArticles } from "@/lib/queries/style";
 import { getGroomingArticles } from "@/lib/queries/grooming";
-import { getFeaturedMembers } from "@/lib/queries/community";
+import { getFeaturedMembers, getBoardPosts } from "@/lib/queries/community";
 
 export default async function Home() {
-  const [featuredStyles, members, groomingArticles, latestStyles] =
+  const [featuredStyles, members, groomingArticles, talkPosts, itemPosts] =
     await Promise.all([
       getFeaturedStyleArticles(3),
       getFeaturedMembers(),
       getGroomingArticles(undefined, 6),
-      getStyleArticles(undefined, 4),
+      getBoardPosts(1, undefined, "talk"),
+      getBoardPosts(1, undefined, "item"),
     ]);
 
   return (
@@ -22,7 +23,10 @@ export default async function Home() {
       <EditorialSection articles={featuredStyles} />
       <FeaturedUsers members={members} />
       <GroomingSection articles={groomingArticles} />
-      <LookbookSection articles={latestStyles} />
+      <CommunityBoardSection
+        talkPosts={talkPosts}
+        itemPosts={itemPosts}
+      />
     </main>
   );
 }
