@@ -53,3 +53,13 @@ body {
   color: var(--foreground-primary);
   font-family: var(--font-body);
 }
+
+a,
+button,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+select,
+summary {
+  cursor: pointer;
+}

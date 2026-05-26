@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Search, User, Menu, X, LogOut } from "lucide-react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import SearchModal from "./SearchModal";
 
 const NAV_LINKS = [
   { label: "COMMUNITY", href: "/community" },
@@ -19,6 +20,7 @@ const NAV_LINKS = [
 export default function NavBar() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [user, setUser] = useState<SupabaseUser | null>(null);
 
   useEffect(() => {
@@ -75,7 +77,7 @@ export default function NavBar() {
           </div>
         </div>
         <div className="flex items-center gap-4 md:gap-6">
-          <button aria-label="Search">
+          <button aria-label="Search" onClick={() => setSearchOpen(true)}>
             <Search size={18} className="md:w-5 md:h-5 text-fg-primary" />
           </button>
           {user ? (
@@ -156,6 +158,8 @@ export default function NavBar() {
           </div>
         </div>
       )}
+
+      {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} />}
     </header>
   );
 }
