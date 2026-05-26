@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Heart, MessageCircle, MoreHorizontal, Trash2, ImageIcon } from "lucide-react";
+import { Heart, MessageCircle, MoreHorizontal, Trash2, ImageIcon, Flag } from "lucide-react";
 import { toggleBoardLike, deleteBoardPost } from "@/lib/actions/community";
 import { timeAgo } from "@/lib/utils/tags";
+import ReportModal from "./ReportModal";
 import type { BoardPost } from "@/lib/types/community";
 
 interface BoardPostCardProps {
@@ -17,6 +18,7 @@ export default function BoardPostCard({ post, currentUserId, onOpenDetail }: Boa
   const [liked, setLiked] = useState(post.is_liked ?? false);
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const [showMenu, setShowMenu] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const [deleted, setDeleted] = useState(false);
 
   const isOwner = currentUserId === post.user_id;
@@ -73,7 +75,7 @@ export default function BoardPostCard({ post, currentUserId, onOpenDetail }: Boa
             {timeAgo(post.created_at)}
           </span>
         </div>
-        {isOwner && (
+        {currentUserId && (
           <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
@@ -82,14 +84,24 @@ export default function BoardPostCard({ post, currentUserId, onOpenDetail }: Boa
               <MoreHorizontal size={16} />
             </button>
             {showMenu && (
-              <div className="absolute right-0 top-6 bg-surface-primary border border-border-light shadow-sm z-10">
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleDelete(); }}
-                  className="flex items-center gap-2 px-4 py-2.5 font-caption text-[11px] text-red-500 hover:bg-surface-card w-full"
-                >
-                  <Trash2 size={13} />
-                  삭제
-                </button>
+              <div className="absolute right-0 top-6 bg-surface-primary border border-border-light shadow-sm z-10 min-w-[100px]">
+                {isOwner ? (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+                    className="flex items-center gap-2 px-4 py-2.5 font-caption text-[11px] text-red-500 hover:bg-surface-card w-full"
+                  >
+                    <Trash2 size={13} />
+                    삭제
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowMenu(false); setShowReport(true); }}
+                    className="flex items-center gap-2 px-4 py-2.5 font-caption text-[11px] text-fg-secondary hover:bg-surface-card w-full"
+                  >
+                    <Flag size={13} />
+                    신고
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -125,6 +137,14 @@ export default function BoardPostCard({ post, currentUserId, onOpenDetail }: Boa
           <ImageIcon size={14} className="text-fg-tertiary" />
         )}
       </div>
+
+      {showReport && (
+        <ReportModal
+          targetType="board_post"
+          targetId={post.id}
+          onClose={() => setShowReport(false)}
+        />
+      )}
     </article>
   );
 }

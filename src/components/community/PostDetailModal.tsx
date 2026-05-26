@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { X, Heart, Bookmark } from "lucide-react";
+import { X, Heart, Bookmark, Flag } from "lucide-react";
 import { toggleLike, toggleBookmark } from "@/lib/actions/community";
 import { timeAgo } from "@/lib/utils/tags";
 import CommentList from "./CommentList";
+import ReportModal from "./ReportModal";
 import type { Post, Comment } from "@/lib/types/community";
 
 interface PostDetailModalProps {
@@ -20,6 +21,7 @@ export default function PostDetailModal({ post, currentUserId, onClose }: PostDe
   const [bookmarked, setBookmarked] = useState(post.is_bookmarked ?? false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loadingComments, setLoadingComments] = useState(true);
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     const fetchComments = async () => {
@@ -111,9 +113,20 @@ export default function PostDetailModal({ post, currentUserId, onClose }: PostDe
                 {timeAgo(post.created_at)}
               </span>
             </div>
-            <button onClick={onClose} className="text-fg-tertiary hover:text-fg-primary">
-              <X size={18} />
-            </button>
+            <div className="flex items-center gap-2">
+              {currentUserId && currentUserId !== post.user_id && (
+                <button
+                  onClick={() => setShowReport(true)}
+                  className="text-fg-tertiary hover:text-fg-primary"
+                  title="신고"
+                >
+                  <Flag size={15} />
+                </button>
+              )}
+              <button onClick={onClose} className="text-fg-tertiary hover:text-fg-primary">
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
           {/* Caption */}
@@ -154,6 +167,14 @@ export default function PostDetailModal({ post, currentUserId, onClose }: PostDe
           </div>
         </div>
       </div>
+
+      {showReport && (
+        <ReportModal
+          targetType="post"
+          targetId={post.id}
+          onClose={() => setShowReport(false)}
+        />
+      )}
     </div>
   );
 }

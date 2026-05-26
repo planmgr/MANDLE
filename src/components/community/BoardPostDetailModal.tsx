@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { X, Heart, MoreHorizontal, Trash2 } from "lucide-react";
+import { X, Heart, MoreHorizontal, Trash2, Flag } from "lucide-react";
 import { toggleBoardLike, deleteBoardPost } from "@/lib/actions/community";
 import { timeAgo } from "@/lib/utils/tags";
 import BoardCommentList from "./BoardCommentList";
+import ReportModal from "./ReportModal";
 import type { BoardPost, BoardComment } from "@/lib/types/community";
 
 interface BoardPostDetailModalProps {
@@ -20,6 +21,7 @@ export default function BoardPostDetailModal({ post, currentUserId, onClose }: B
   const [comments, setComments] = useState<BoardComment[]>([]);
   const [loadingComments, setLoadingComments] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const [deleted, setDeleted] = useState(false);
 
   const isOwner = currentUserId === post.user_id;
@@ -97,7 +99,7 @@ export default function BoardPostDetailModal({ post, currentUserId, onClose }: B
             </span>
           </div>
           <div className="flex items-center gap-2">
-            {isOwner && (
+            {currentUserId && (
               <div className="relative">
                 <button
                   onClick={() => setShowMenu(!showMenu)}
@@ -106,14 +108,24 @@ export default function BoardPostDetailModal({ post, currentUserId, onClose }: B
                   <MoreHorizontal size={16} />
                 </button>
                 {showMenu && (
-                  <div className="absolute right-0 top-6 bg-surface-primary border border-border-light shadow-sm z-10">
-                    <button
-                      onClick={handleDelete}
-                      className="flex items-center gap-2 px-4 py-2.5 font-caption text-[11px] text-red-500 hover:bg-surface-card w-full"
-                    >
-                      <Trash2 size={13} />
-                      삭제
-                    </button>
+                  <div className="absolute right-0 top-6 bg-surface-primary border border-border-light shadow-sm z-10 min-w-[100px]">
+                    {isOwner ? (
+                      <button
+                        onClick={handleDelete}
+                        className="flex items-center gap-2 px-4 py-2.5 font-caption text-[11px] text-red-500 hover:bg-surface-card w-full"
+                      >
+                        <Trash2 size={13} />
+                        삭제
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => { setShowMenu(false); setShowReport(true); }}
+                        className="flex items-center gap-2 px-4 py-2.5 font-caption text-[11px] text-fg-secondary hover:bg-surface-card w-full"
+                      >
+                        <Flag size={13} />
+                        신고
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -170,6 +182,14 @@ export default function BoardPostDetailModal({ post, currentUserId, onClose }: B
           </div>
         </div>
       </div>
+
+      {showReport && (
+        <ReportModal
+          targetType="board_post"
+          targetId={post.id}
+          onClose={() => setShowReport(false)}
+        />
+      )}
     </div>
   );
 }

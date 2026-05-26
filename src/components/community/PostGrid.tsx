@@ -3,12 +3,12 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import PostCard from "./PostCard";
 import PostDetailModal from "./PostDetailModal";
-import type { Post, FeedTab } from "@/lib/types/community";
+import type { Post, MyPageTab } from "@/lib/types/community";
 
 interface PostGridProps {
   initialPosts: Post[];
   currentUserId?: string;
-  tab: FeedTab;
+  tab: MyPageTab;
   tag?: string;
 }
 

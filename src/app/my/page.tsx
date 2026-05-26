@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
-import { getUserStats, getUserPosts, getBookmarkedPosts } from "@/lib/queries/community";
+import { getUserStats, getUserPosts, getBookmarkedPosts, getUserBoardPosts } from "@/lib/queries/community";
 import PostGrid from "@/components/community/PostGrid";
+import BoardPostList from "@/components/community/BoardPostList";
 import ProfileHeader from "@/components/community/ProfileHeader";
+import type { MyPageTab } from "@/lib/types/community";
 
 export const metadata: Metadata = {
   title: "MY PAGE — MANDLE",
@@ -47,22 +49,28 @@ export default async function MyPage({ searchParams }: MyPageProps) {
   const stats = await getUserStats(user.id);
 
   let posts;
+  let boardPosts;
+
   if (tab === "saved") {
     posts = await getBookmarkedPosts(user.id, 1);
+  } else if (tab === "talks") {
+    boardPosts = await getUserBoardPosts(user.id, 1);
   } else {
     posts = await getUserPosts(user.id, 1);
   }
 
   const TABS = [
     { label: "MY LOOKS", value: "looks" },
+    { label: "MY TALKS", value: "talks" },
     { label: "SAVED", value: "saved" },
   ];
 
   return (
     <main>
       {/* Profile Header */}
-      <section className="section-px py-10 md:py-14">
+      <section className="section-px py-12 md:py-16">
         <ProfileHeader
+          userId={user.id}
           displayName={displayName}
           email={user.email ?? ""}
           nickname={nickname}
@@ -73,9 +81,14 @@ export default async function MyPage({ searchParams }: MyPageProps) {
         />
       </section>
 
+      {/* Divider */}
+      <div className="section-px">
+        <div className="h-px bg-border-light" />
+      </div>
+
       {/* Tabs */}
-      <section className="section-px">
-        <div className="flex items-center gap-6 border-b border-border-light">
+      <section className="section-px pt-6">
+        <div className="flex items-center gap-8 border-b border-border-light">
           {TABS.map((t) => (
             <a
               key={t.value}
@@ -94,11 +107,19 @@ export default async function MyPage({ searchParams }: MyPageProps) {
 
       {/* Content */}
       <section className="section-px py-8 md:py-10">
-        <PostGrid
-          initialPosts={posts}
-          currentUserId={user.id}
-          tab="mylook"
-        />
+        {tab === "talks" ? (
+          <BoardPostList
+            initialPosts={boardPosts ?? []}
+            currentUserId={user.id}
+            apiTab="mytalks"
+          />
+        ) : (
+          <PostGrid
+            initialPosts={posts ?? []}
+            currentUserId={user.id}
+            tab={tab === "saved" ? ("mysaved" as MyPageTab) : "mylook"}
+          />
+        )}
       </section>
     </main>
   );

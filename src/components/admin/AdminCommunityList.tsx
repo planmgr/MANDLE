@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Trash2, Eye, EyeOff } from "lucide-react";
-import { adminDeletePost, adminDeleteBoardPost, adminToggleBoardPostVisibility } from "@/lib/actions/admin";
+import { adminDeletePost, adminDeleteBoardPost, adminToggleBoardPostVisibility, adminUpdateReportStatus } from "@/lib/actions/admin";
 
-type CommunityTab = "mylook" | "board";
+type CommunityTab = "mylook" | "board" | "reports";
 
 interface PostItem {
   id: number;
@@ -32,20 +32,38 @@ interface BoardPostItem {
   profiles: { nickname: string };
 }
 
+interface ReportItem {
+  id: number;
+  reporter_id: string;
+  target_type: string;
+  target_id: number;
+  reason: string;
+  description: string | null;
+  status: string;
+  created_at: string;
+  reporter: { nickname: string };
+}
+
 interface AdminCommunityListProps {
   posts: PostItem[];
   boardPosts: BoardPostItem[];
+  reports: ReportItem[];
 }
 
-export default function AdminCommunityList({ posts, boardPosts }: AdminCommunityListProps) {
+export default function AdminCommunityList({ posts, boardPosts, reports }: AdminCommunityListProps) {
   const [tab, setTab] = useState<CommunityTab>("mylook");
   const [postList, setPostList] = useState(posts);
   const [boardPostList, setBoardPostList] = useState(boardPosts);
+  const [reportList, setReportList] = useState(reports);
   const [loading, setLoading] = useState<number | null>(null);
+  const [reviewMenuId, setReviewMenuId] = useState<number | null>(null);
+
+  const pendingCount = reportList.filter((r) => r.status === "pending").length;
 
   const tabs: { label: string; value: CommunityTab }[] = [
     { label: "MY LOOK", value: "mylook" },
     { label: "TALK / ITEM", value: "board" },
+    { label: `REPORTS${pendingCount > 0 ? ` (${pendingCount})` : ""}`, value: "reports" },
   ];
 
   const handleDeletePost = async (postId: number) => {
@@ -68,6 +86,51 @@ export default function AdminCommunityList({ posts, boardPosts }: AdminCommunity
       setBoardPostList(boardPostList.filter((p) => p.id !== postId));
     } catch {
       alert("삭제에 실패했습니다.");
+    }
+    setLoading(null);
+  };
+
+  const handleDismiss = async (reportId: number) => {
+    setLoading(reportId);
+    try {
+      await adminUpdateReportStatus(reportId, "dismissed");
+      setReportList(reportList.map((r) =>
+        r.id === reportId ? { ...r, status: "dismissed" } : r
+      ));
+    } catch {
+      alert("상태 변경에 실패했습니다.");
+    }
+    setLoading(null);
+  };
+
+  const handleReviewAction = async (report: ReportItem, action: "hide" | "delete") => {
+    setReviewMenuId(null);
+    setLoading(report.id);
+    try {
+      // 1. Update report status
+      await adminUpdateReportStatus(report.id, "reviewed");
+
+      // 2. Take action on the post
+      if (action === "hide") {
+        if (report.target_type === "board_post") {
+          await adminToggleBoardPostVisibility(report.target_id, true);
+        } else {
+          // posts don't have is_hidden, so delete instead
+          await adminDeletePost(report.target_id);
+        }
+      } else {
+        if (report.target_type === "board_post") {
+          await adminDeleteBoardPost(report.target_id);
+        } else {
+          await adminDeletePost(report.target_id);
+        }
+      }
+
+      setReportList(reportList.map((r) =>
+        r.id === report.id ? { ...r, status: "reviewed" } : r
+      ));
+    } catch {
+      alert("처리에 실패했습니다.");
     }
     setLoading(null);
   };
@@ -163,7 +226,8 @@ export default function AdminCommunityList({ posts, boardPosts }: AdminCommunity
             등록된 게시글이 없습니다.
           </p>
         )
-      ) : boardPostList.length > 0 ? (
+      ) : tab === "board" ? (
+        boardPostList.length > 0 ? (
         <div className="border border-border-light overflow-x-auto">
           <table className="w-full text-left">
             <thead>
@@ -230,6 +294,105 @@ export default function AdminCommunityList({ posts, boardPosts }: AdminCommunity
             </tbody>
           </table>
         </div>
+      ) : (
+          <p className="font-body text-[14px] text-fg-tertiary text-center py-16">
+            등록된 게시글이 없습니다.
+          </p>
+        )
+      ) : tab === "reports" ? (
+        reportList.length > 0 ? (
+          <div className="border border-border-light overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-border-light bg-surface-card">
+                  <th className="px-4 py-3 font-caption text-[10px] font-medium tracking-[1.5px] text-fg-secondary">TARGET</th>
+                  <th className="px-4 py-3 font-caption text-[10px] font-medium tracking-[1.5px] text-fg-secondary">ID</th>
+                  <th className="px-4 py-3 font-caption text-[10px] font-medium tracking-[1.5px] text-fg-secondary">REASON</th>
+                  <th className="px-4 py-3 font-caption text-[10px] font-medium tracking-[1.5px] text-fg-secondary">DETAIL</th>
+                  <th className="px-4 py-3 font-caption text-[10px] font-medium tracking-[1.5px] text-fg-secondary">REPORTER</th>
+                  <th className="px-4 py-3 font-caption text-[10px] font-medium tracking-[1.5px] text-fg-secondary">DATE</th>
+                  <th className="px-4 py-3 font-caption text-[10px] font-medium tracking-[1.5px] text-fg-secondary text-center">STATUS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reportList.map((report) => (
+                  <tr key={report.id} className={`border-b border-border-light last:border-0 hover:bg-surface-card/50 transition-colors ${report.status !== "pending" ? "opacity-50" : ""}`}>
+                    <td className="px-4 py-3 font-caption text-[10px] tracking-[1.5px] text-fg-secondary uppercase">
+                      {report.target_type === "board_post" ? "BOARD" : "POST"}
+                    </td>
+                    <td className="px-4 py-3 font-caption text-[11px] text-fg-tertiary">
+                      #{report.target_id}
+                    </td>
+                    <td className="px-4 py-3 font-caption text-[10px] tracking-[1.5px] text-fg-secondary uppercase">
+                      {report.reason}
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="font-body text-[12px] text-fg-secondary truncate max-w-[200px]">
+                        {report.description || "—"}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3 font-caption text-[11px] text-fg-secondary">
+                      {report.reporter?.nickname ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 font-caption text-[11px] text-fg-tertiary">
+                      {new Date(report.created_at).toLocaleDateString("ko-KR")}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {report.status === "pending" ? (
+                        <div className="flex items-center justify-center gap-1 relative">
+                          <button
+                            onClick={() => setReviewMenuId(reviewMenuId === report.id ? null : report.id)}
+                            disabled={loading === report.id}
+                            className="px-2 py-1 font-caption text-[9px] font-medium tracking-[1px] text-green-600 hover:bg-green-50 transition-colors disabled:opacity-40"
+                          >
+                            REVIEW
+                          </button>
+                          {reviewMenuId === report.id && (
+                            <div className="absolute right-0 top-7 bg-surface-primary border border-border-light shadow-sm z-10 min-w-[120px]">
+                              {report.target_type === "board_post" && (
+                                <button
+                                  onClick={() => handleReviewAction(report, "hide")}
+                                  className="flex items-center gap-2 px-4 py-2.5 font-caption text-[11px] text-fg-secondary hover:bg-surface-card w-full text-left"
+                                >
+                                  <EyeOff size={13} />
+                                  숨김
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleReviewAction(report, "delete")}
+                                className="flex items-center gap-2 px-4 py-2.5 font-caption text-[11px] text-red-500 hover:bg-surface-card w-full text-left"
+                              >
+                                <Trash2 size={13} />
+                                삭제
+                              </button>
+                            </div>
+                          )}
+                          <button
+                            onClick={() => handleDismiss(report.id)}
+                            disabled={loading === report.id}
+                            className="px-2 py-1 font-caption text-[9px] font-medium tracking-[1px] text-fg-tertiary hover:bg-surface-card transition-colors disabled:opacity-40"
+                          >
+                            DISMISS
+                          </button>
+                        </div>
+                      ) : (
+                        <span className={`font-caption text-[10px] font-medium tracking-[1px] ${
+                          report.status === "reviewed" ? "text-green-600" : "text-fg-tertiary"
+                        }`}>
+                          {report.status.toUpperCase()}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="font-body text-[14px] text-fg-tertiary text-center py-16">
+            신고 내역이 없습니다.
+          </p>
+        )
       ) : (
         <p className="font-body text-[14px] text-fg-tertiary text-center py-16">
           등록된 게시글이 없습니다.
