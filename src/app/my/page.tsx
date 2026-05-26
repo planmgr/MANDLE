@@ -36,7 +36,7 @@ export default async function MyPage({ searchParams }: MyPageProps) {
     .from("profiles")
     .select("nickname, avatar_url, bio, nickname_set_by_user")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
   const nickname = profile?.nickname ?? user.user_metadata?.nickname ?? user.email?.split("@")[0] ?? "USER";
   const avatarUrl = profile?.avatar_url ?? user.user_metadata?.avatar_url ?? null;
