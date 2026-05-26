@@ -80,6 +80,7 @@ export default function CreateBoardPostDialog({ onClose, category }: CreateBoard
             onChange={(e) => setBody(e.target.value)}
             placeholder="내용을 입력하세요..."
             rows={6}
+            maxLength={5000}
             className="w-full font-body text-[13px] text-fg-primary placeholder:text-fg-tertiary bg-transparent border border-border-light px-3 py-2.5 outline-none resize-none focus:border-fg-tertiary transition-colors"
           />
 

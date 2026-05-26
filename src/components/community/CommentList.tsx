@@ -101,6 +101,7 @@ export default function CommentList({ postId, initialComments, currentUserId }: 
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="댓글을 입력하세요..."
+            maxLength={1000}
             className="flex-1 font-body text-[13px] text-fg-primary placeholder:text-fg-tertiary bg-transparent outline-none"
           />
           <button

@@ -243,6 +243,7 @@ export async function getBoardPosts(
   let query = supabase
     .from("board_posts")
     .select("*, profiles!board_posts_user_id_fkey(*)")
+    .eq("is_hidden", false)
     .order("created_at", { ascending: false })
     .range(from, from + BOARD_PAGE_SIZE - 1);
 

@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { FileText, Users, LayoutDashboard, Scissors } from "lucide-react";
+import { FileText, Users, LayoutDashboard, Scissors, MessageSquare } from "lucide-react";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Style", href: "/admin/style", icon: FileText },
   { label: "Grooming", href: "/admin/grooming", icon: Scissors },
   { label: "Members", href: "/admin/members", icon: Users },
+  { label: "Community", href: "/admin/community", icon: MessageSquare },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
