@@ -4,6 +4,8 @@ import {
   getFeedPosts,
   getFollowingPosts,
   getBoardPosts,
+  getUserBoardPosts,
+  getBookmarkedPosts,
 } from "@/lib/queries/community";
 
 export async function GET(request: NextRequest) {
@@ -17,7 +19,13 @@ export async function GET(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   let posts;
-  if (tab === "talk" || tab === "item") {
+  if (tab === "mytalks") {
+    if (!user) return Response.json([]);
+    posts = await getUserBoardPosts(user.id, page);
+  } else if (tab === "mysaved") {
+    if (!user) return Response.json([]);
+    posts = await getBookmarkedPosts(user.id, page);
+  } else if (tab === "talk" || tab === "item") {
     posts = await getBoardPosts(page, user?.id, tab);
   } else if (filter === "following" && user) {
     posts = await getFollowingPosts(user.id, page);

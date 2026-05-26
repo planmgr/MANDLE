@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Heart, MessageCircle, Bookmark, MoreHorizontal, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, MoreHorizontal, Trash2, Flag } from "lucide-react";
 import { toggleLike, toggleBookmark, deletePost } from "@/lib/actions/community";
 import { timeAgo } from "@/lib/utils/tags";
+import ReportModal from "./ReportModal";
 import type { Post } from "@/lib/types/community";
 
 interface PostCardProps {
@@ -18,6 +19,7 @@ export default function PostCard({ post, currentUserId, onOpenDetail }: PostCard
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const [bookmarked, setBookmarked] = useState(post.is_bookmarked ?? false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const [deleted, setDeleted] = useState(false);
 
   const isOwner = currentUserId === post.user_id;
@@ -89,7 +91,7 @@ export default function PostCard({ post, currentUserId, onOpenDetail }: PostCard
             {timeAgo(post.created_at)}
           </span>
         </div>
-        {isOwner && (
+        {currentUserId && (
           <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
@@ -98,14 +100,24 @@ export default function PostCard({ post, currentUserId, onOpenDetail }: PostCard
               <MoreHorizontal size={16} />
             </button>
             {showMenu && (
-              <div className="absolute right-0 top-6 bg-surface-primary border border-border-light shadow-sm z-10">
-                <button
-                  onClick={handleDelete}
-                  className="flex items-center gap-2 px-4 py-2.5 font-caption text-[11px] text-red-500 hover:bg-surface-card w-full"
-                >
-                  <Trash2 size={13} />
-                  삭제
-                </button>
+              <div className="absolute right-0 top-6 bg-surface-primary border border-border-light shadow-sm z-10 min-w-[100px]">
+                {isOwner ? (
+                  <button
+                    onClick={handleDelete}
+                    className="flex items-center gap-2 px-4 py-2.5 font-caption text-[11px] text-red-500 hover:bg-surface-card w-full"
+                  >
+                    <Trash2 size={13} />
+                    삭제
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowMenu(false); setShowReport(true); }}
+                    className="flex items-center gap-2 px-4 py-2.5 font-caption text-[11px] text-fg-secondary hover:bg-surface-card w-full"
+                  >
+                    <Flag size={13} />
+                    신고
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -151,6 +163,14 @@ export default function PostCard({ post, currentUserId, onOpenDetail }: PostCard
         <p className="font-body text-[13px] text-fg-primary leading-[1.6] line-clamp-2">
           {post.caption}
         </p>
+      )}
+
+      {showReport && (
+        <ReportModal
+          targetType="post"
+          targetId={post.id}
+          onClose={() => setShowReport(false)}
+        />
       )}
     </article>
   );

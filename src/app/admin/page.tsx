@@ -1,17 +1,18 @@
 import Link from "next/link";
-import { FileText, Scissors, Users, MessageSquare } from "lucide-react";
+import { FileText, Scissors, Users, MessageSquare, UserCog } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import AdminLayout from "@/components/admin/AdminLayout";
 
 export default async function AdminDashboard() {
   const supabase = await createClient();
 
-  const [styleRes, groomingRes, membersRes, postsRes, boardPostsRes] = await Promise.all([
+  const [styleRes, groomingRes, membersRes, postsRes, boardPostsRes, usersRes] = await Promise.all([
     supabase.from("style_articles").select("id", { count: "exact", head: true }),
     supabase.from("grooming_articles").select("id", { count: "exact", head: true }),
     supabase.from("featured_members").select("id", { count: "exact", head: true }),
     supabase.from("posts").select("id", { count: "exact", head: true }),
     supabase.from("board_posts").select("id", { count: "exact", head: true }),
+    supabase.from("profiles").select("id", { count: "exact", head: true }),
   ]);
 
   const communityTotal = (postsRes.count ?? 0) + (boardPostsRes.count ?? 0);
@@ -21,6 +22,7 @@ export default async function AdminDashboard() {
     { label: "Grooming Articles", count: groomingRes.count ?? 0, href: "/admin/grooming", icon: Scissors },
     { label: "Featured Members", count: membersRes.count ?? 0, href: "/admin/members", icon: Users },
     { label: "Community Posts", count: communityTotal, href: "/admin/community", icon: MessageSquare },
+    { label: "Total Users", count: usersRes.count ?? 0, href: "/admin/users", icon: UserCog },
   ];
 
   return (

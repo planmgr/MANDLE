@@ -342,6 +342,19 @@ export async function adminToggleBoardPostVisibility(postId: number, isHidden: b
   return { is_hidden: isHidden };
 }
 
+export async function adminUpdateReportStatus(reportId: number, status: "reviewed" | "dismissed") {
+  const { supabase } = await requireAdmin();
+
+  const { error } = await supabase
+    .from("reports")
+    .update({ status })
+    .eq("id", reportId);
+
+  if (error) throw new Error("상태 변경에 실패했습니다.");
+  revalidatePath("/admin/community");
+  return { status };
+}
+
 export async function adminDeleteBoardPost(postId: number) {
   const { supabase } = await requireAdmin();
 
@@ -364,4 +377,47 @@ export async function adminDeleteBoardPost(postId: number) {
   await supabase.from("board_posts").delete().eq("id", postId);
   revalidatePath("/community");
   revalidatePath("/admin/community");
+}
+
+// ===== USER MANAGEMENT =====
+
+export async function adminUpdateUserProfile(userId: string, data: { nickname?: string; bio?: string }) {
+  const { supabase } = await requireAdmin();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const update: Record<string, any> = { updated_at: new Date().toISOString() };
+  if (data.nickname !== undefined) update.nickname = data.nickname.trim();
+  if (data.bio !== undefined) update.bio = data.bio.trim() || null;
+
+  const { error } = await supabase
+    .from("profiles")
+    .update(update)
+    .eq("id", userId);
+
+  if (error) throw new Error("프로필 수정에 실패했습니다.");
+  revalidatePath("/admin/users");
+}
+
+export async function adminUpdateUserStatus(
+  userId: string,
+  status: "active" | "suspended" | "banned",
+  options?: { suspendedUntil?: string; memo?: string }
+) {
+  const { supabase } = await requireAdmin();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const update: Record<string, any> = {
+    status,
+    suspended_until: status === "suspended" ? (options?.suspendedUntil ?? null) : null,
+    updated_at: new Date().toISOString(),
+  };
+  if (options?.memo !== undefined) update.admin_memo = options.memo || null;
+
+  const { error } = await supabase
+    .from("profiles")
+    .update(update)
+    .eq("id", userId);
+
+  if (error) throw new Error("상태 변경에 실패했습니다.");
+  revalidatePath("/admin/users");
 }

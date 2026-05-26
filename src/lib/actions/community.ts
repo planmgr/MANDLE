@@ -34,10 +34,40 @@ function validateLength(value: string, maxLength: number, fieldName: string) {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function checkUserStatus(supabase: any, userId: string) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("status, suspended_until")
+    .eq("id", userId)
+    .single();
+
+  if (!profile || profile.status === "active") return;
+
+  if (profile.status === "banned") {
+    throw new Error("계정이 정지되었습니다. 관리자에게 문의해주세요.");
+  }
+
+  if (profile.status === "suspended") {
+    if (profile.suspended_until && new Date(profile.suspended_until) < new Date()) {
+      await supabase
+        .from("profiles")
+        .update({ status: "active", suspended_until: null })
+        .eq("id", userId);
+      return;
+    }
+    const until = profile.suspended_until
+      ? new Date(profile.suspended_until).toLocaleDateString("ko-KR")
+      : "";
+    throw new Error(`계정이 일시 정지되었습니다.${until ? ` (${until}까지)` : ""}`);
+  }
+}
+
 export async function createPost(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
+  await checkUserStatus(supabase, user.id);
 
   const imageFile = formData.get("image") as File;
   const caption = formData.get("caption") as string;
@@ -91,6 +121,7 @@ export async function deletePost(postId: number) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
+  await checkUserStatus(supabase, user.id);
 
   const { data: post } = await supabase
     .from("posts")
@@ -116,6 +147,7 @@ export async function toggleLike(postId: number) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
+  await checkUserStatus(supabase, user.id);
 
   const { data: existing } = await supabase
     .from("likes")
@@ -129,6 +161,25 @@ export async function toggleLike(postId: number) {
     return { liked: false };
   } else {
     await supabase.from("likes").insert({ user_id: user.id, post_id: postId });
+
+    // Send notification to post owner (not self), dedup by deleting old one first
+    const { data: post } = await supabase.from("posts").select("user_id").eq("id", postId).single();
+    if (post && post.user_id !== user.id) {
+      await supabase.from("notifications").delete()
+        .eq("actor_id", user.id)
+        .eq("recipient_id", post.user_id)
+        .eq("type", "like")
+        .eq("target_type", "post")
+        .eq("target_id", postId);
+      await supabase.from("notifications").insert({
+        recipient_id: post.user_id,
+        actor_id: user.id,
+        type: "like",
+        target_type: "post",
+        target_id: postId,
+      });
+    }
+
     return { liked: true };
   }
 }
@@ -137,6 +188,7 @@ export async function addComment(postId: number, content: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
+  await checkUserStatus(supabase, user.id);
 
   if (!content?.trim()) throw new Error("댓글 내용을 입력해주세요.");
   validateLength(content, MAX_COMMENT_LENGTH, "댓글");
@@ -148,6 +200,19 @@ export async function addComment(postId: number, content: string) {
     .single();
 
   if (error) throw new Error("댓글 작성에 실패했습니다.");
+
+  // Send notification to post owner (not self)
+  const { data: post } = await supabase.from("posts").select("user_id").eq("id", postId).single();
+  if (post && post.user_id !== user.id) {
+    await supabase.from("notifications").insert({
+      recipient_id: post.user_id,
+      actor_id: user.id,
+      type: "comment",
+      target_type: "post",
+      target_id: postId,
+    });
+  }
+
   return data;
 }
 
@@ -163,6 +228,7 @@ export async function toggleBookmark(postId: number) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
+  await checkUserStatus(supabase, user.id);
 
   const { data: existing } = await supabase
     .from("bookmarks")
@@ -184,6 +250,7 @@ export async function updateProfile(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
+  await checkUserStatus(supabase, user.id);
 
   const nickname = (formData.get("nickname") as string)?.trim();
   const bio = (formData.get("bio") as string)?.trim() || null;
@@ -234,6 +301,7 @@ export async function toggleFollow(targetUserId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
+  await checkUserStatus(supabase, user.id);
 
   const { data: existing } = await supabase
     .from("follows")
@@ -247,6 +315,20 @@ export async function toggleFollow(targetUserId: string) {
     return { following: false };
   } else {
     await supabase.from("follows").insert({ follower_id: user.id, following_id: targetUserId });
+
+    // Send notification to target user, dedup by deleting old one first
+    if (targetUserId !== user.id) {
+      await supabase.from("notifications").delete()
+        .eq("actor_id", user.id)
+        .eq("recipient_id", targetUserId)
+        .eq("type", "follow");
+      await supabase.from("notifications").insert({
+        recipient_id: targetUserId,
+        actor_id: user.id,
+        type: "follow",
+      });
+    }
+
     return { following: true };
   }
 }
@@ -257,6 +339,7 @@ export async function createBoardPost(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
+  await checkUserStatus(supabase, user.id);
 
   const title = (formData.get("title") as string)?.trim();
   const body = (formData.get("body") as string)?.trim();
@@ -297,6 +380,7 @@ export async function deleteBoardPost(postId: number) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
+  await checkUserStatus(supabase, user.id);
 
   const { data: post } = await supabase
     .from("board_posts")
@@ -323,6 +407,7 @@ export async function toggleBoardLike(postId: number) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
+  await checkUserStatus(supabase, user.id);
 
   const { data: existing } = await supabase
     .from("board_likes")
@@ -336,6 +421,25 @@ export async function toggleBoardLike(postId: number) {
     return { liked: false };
   } else {
     await supabase.from("board_likes").insert({ user_id: user.id, board_post_id: postId });
+
+    // Send notification to post owner (not self), dedup by deleting old one first
+    const { data: post } = await supabase.from("board_posts").select("user_id").eq("id", postId).single();
+    if (post && post.user_id !== user.id) {
+      await supabase.from("notifications").delete()
+        .eq("actor_id", user.id)
+        .eq("recipient_id", post.user_id)
+        .eq("type", "board_like")
+        .eq("target_type", "board_post")
+        .eq("target_id", postId);
+      await supabase.from("notifications").insert({
+        recipient_id: post.user_id,
+        actor_id: user.id,
+        type: "board_like",
+        target_type: "board_post",
+        target_id: postId,
+      });
+    }
+
     return { liked: true };
   }
 }
@@ -344,6 +448,7 @@ export async function addBoardComment(postId: number, content: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
+  await checkUserStatus(supabase, user.id);
 
   if (!content?.trim()) throw new Error("댓글 내용을 입력해주세요.");
   validateLength(content, MAX_COMMENT_LENGTH, "댓글");
@@ -355,7 +460,70 @@ export async function addBoardComment(postId: number, content: string) {
     .single();
 
   if (error) throw new Error("댓글 작성에 실패했습니다.");
+
+  // Send notification to post owner (not self)
+  const { data: post } = await supabase.from("board_posts").select("user_id").eq("id", postId).single();
+  if (post && post.user_id !== user.id) {
+    await supabase.from("notifications").insert({
+      recipient_id: post.user_id,
+      actor_id: user.id,
+      type: "board_comment",
+      target_type: "board_post",
+      target_id: postId,
+    });
+  }
+
   return data;
+}
+
+// ===== REPORT ACTIONS =====
+
+const MAX_REPORT_DESCRIPTION_LENGTH = 500;
+
+export async function reportPost(targetType: "post" | "board_post", targetId: number, reason: string, description?: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+  await checkUserStatus(supabase, user.id);
+
+  const validReasons = ["spam", "inappropriate", "harassment", "other"];
+  if (!validReasons.includes(reason)) throw new Error("유효하지 않은 신고 사유입니다.");
+
+  if (description) validateLength(description, MAX_REPORT_DESCRIPTION_LENGTH, "설명");
+
+  // Check not reporting own post
+  const table = targetType === "post" ? "posts" : "board_posts";
+  const { data: post } = await supabase.from(table).select("user_id").eq("id", targetId).single();
+  if (post && post.user_id === user.id) throw new Error("본인 게시글은 신고할 수 없습니다.");
+
+  const { error } = await supabase.from("reports").insert({
+    reporter_id: user.id,
+    target_type: targetType,
+    target_id: targetId,
+    reason,
+    description: description?.trim() || null,
+  });
+
+  if (error) {
+    if (error.code === "23505") throw new Error("이미 신고한 게시글입니다.");
+    throw new Error("신고 접수에 실패했습니다.");
+  }
+
+  return { success: true };
+}
+
+// ===== NOTIFICATION ACTIONS =====
+
+export async function markNotificationsRead() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  await supabase
+    .from("notifications")
+    .update({ read: true })
+    .eq("recipient_id", user.id)
+    .eq("read", false);
 }
 
 export async function deleteBoardComment(commentId: number) {

@@ -4,10 +4,11 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Search, User, Menu, X, LogOut } from "lucide-react";
+import { Search, User, Menu, X, LogOut, Bell } from "lucide-react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import SearchModal from "./SearchModal";
+import NotificationModal from "./NotificationModal";
 
 const NAV_LINKS = [
   { label: "COMMUNITY", href: "/community" },
@@ -21,6 +22,8 @@ export default function NavBar() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [user, setUser] = useState<SupabaseUser | null>(null);
 
   useEffect(() => {
@@ -40,6 +43,23 @@ export default function NavBar() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Fetch unread notification count
+  useEffect(() => {
+    if (!user) return;
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch("/api/notifications?countOnly=true");
+        const data = await res.json();
+        setUnreadCount(data.unreadCount ?? 0);
+      } catch {
+        // silently fail
+      }
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 60000); // poll every 60s
+    return () => clearInterval(interval);
+  }, [user]);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -80,6 +100,18 @@ export default function NavBar() {
           <button aria-label="Search" onClick={() => setSearchOpen(true)}>
             <Search size={18} className="md:w-5 md:h-5 text-fg-primary" />
           </button>
+          {user && (
+            <button
+              aria-label="Notifications"
+              onClick={() => setNotifOpen(true)}
+              className="relative"
+            >
+              <Bell size={18} className="md:w-5 md:h-5 text-fg-primary" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-[8px] h-[8px] bg-red-500 rounded-full" />
+              )}
+            </button>
+          )}
           {user ? (
             <div className="hidden md:flex items-center gap-3">
               <Link
@@ -160,6 +192,12 @@ export default function NavBar() {
       )}
 
       {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} />}
+      {notifOpen && (
+        <NotificationModal
+          onClose={() => setNotifOpen(false)}
+          onRead={() => setUnreadCount(0)}
+        />
+      )}
     </header>
   );
 }

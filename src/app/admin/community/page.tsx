@@ -5,7 +5,7 @@ import AdminCommunityList from "@/components/admin/AdminCommunityList";
 export default async function AdminCommunityPage() {
   const supabase = await createClient();
 
-  const [postsRes, boardPostsRes] = await Promise.all([
+  const [postsRes, boardPostsRes, reportsRes] = await Promise.all([
     supabase
       .from("posts")
       .select("id, user_id, image_url, caption, likes_count, comments_count, created_at, profiles!posts_user_id_profiles_fkey(nickname)")
@@ -14,6 +14,11 @@ export default async function AdminCommunityPage() {
     supabase
       .from("board_posts")
       .select("id, user_id, title, body, image_url, category, is_hidden, likes_count, comments_count, created_at, profiles!board_posts_user_id_fkey(nickname)")
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("reports")
+      .select("id, reporter_id, target_type, target_id, reason, description, status, created_at, reporter:profiles!reports_reporter_id_fkey(nickname)")
       .order("created_at", { ascending: false })
       .limit(100),
   ]);
@@ -29,6 +34,11 @@ export default async function AdminCommunityPage() {
     ...p,
     profiles: Array.isArray(p.profiles) ? p.profiles[0] : p.profiles,
   }));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const reports = (reportsRes.data ?? []).map((r: any) => ({
+    ...r,
+    reporter: Array.isArray(r.reporter) ? r.reporter[0] : r.reporter,
+  }));
 
   return (
     <AdminLayout>
@@ -38,6 +48,7 @@ export default async function AdminCommunityPage() {
       <AdminCommunityList
         posts={posts}
         boardPosts={boardPosts}
+        reports={reports}
       />
     </AdminLayout>
   );

@@ -72,7 +72,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
     if (currentUserId && currentUserId !== userId) {
       const { data: followData } = await supabase
         .from("follows")
-        .select("id")
+        .select("follower_id")
         .eq("follower_id", currentUserId)
         .eq("following_id", userId)
         .maybeSingle();

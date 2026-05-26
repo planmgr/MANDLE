@@ -74,3 +74,4 @@ export interface TopMember {
 }
 
 export type FeedTab = "mylook" | "talk" | "item";
+export type MyPageTab = FeedTab | "mytalks" | "mysaved";

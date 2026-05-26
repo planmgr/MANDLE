@@ -190,13 +190,26 @@ export async function getRecommendedUsers(
 ): Promise<Profile[]> {
   const supabase = await createClient();
 
+  // If logged in, exclude self and already-followed users
+  let excludeIds: string[] = [];
+  if (currentUserId) {
+    excludeIds.push(currentUserId);
+    const { data: following } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", currentUserId);
+    if (following) {
+      excludeIds.push(...following.map((f) => f.following_id));
+    }
+  }
+
   let query = supabase
     .from("profiles")
     .select("*")
     .limit(limit);
 
-  if (currentUserId) {
-    query = query.neq("id", currentUserId);
+  if (excludeIds.length > 0) {
+    query = query.not("id", "in", `(${excludeIds.join(",")})`);
   }
 
   const { data } = await query;
@@ -255,6 +268,24 @@ export async function getBoardPosts(
 
   if (!posts) return [];
   return attachBoardLikes(supabase, posts as BoardPost[], userId);
+}
+
+export async function getUserBoardPosts(
+  targetUserId: string,
+  page: number
+): Promise<BoardPost[]> {
+  const supabase = await createClient();
+  const from = (page - 1) * BOARD_PAGE_SIZE;
+
+  const { data: posts } = await supabase
+    .from("board_posts")
+    .select("*, profiles!board_posts_user_id_fkey(*)")
+    .eq("user_id", targetUserId)
+    .eq("is_hidden", false)
+    .order("created_at", { ascending: false })
+    .range(from, from + BOARD_PAGE_SIZE - 1);
+
+  return (posts as BoardPost[]) ?? [];
 }
 
 export async function getBoardPostById(
