@@ -301,3 +301,67 @@ export async function deleteFeaturedMember(id: number) {
   revalidatePath("/members");
   revalidatePath("/admin/members");
 }
+
+// ===== COMMUNITY MANAGEMENT =====
+
+export async function adminDeletePost(postId: number) {
+  const { supabase } = await requireAdmin();
+
+  const { data: post } = await supabase
+    .from("posts")
+    .select("image_url")
+    .eq("id", postId)
+    .single();
+
+  if (!post) throw new Error("게시글을 찾을 수 없습니다.");
+
+  if (post.image_url) {
+    const url = new URL(post.image_url);
+    const storagePath = url.pathname.split("/storage/v1/object/public/posts/")[1];
+    if (storagePath) {
+      await supabase.storage.from("posts").remove([decodeURIComponent(storagePath)]);
+    }
+  }
+
+  await supabase.from("posts").delete().eq("id", postId);
+  revalidatePath("/community");
+  revalidatePath("/admin/community");
+}
+
+export async function adminToggleBoardPostVisibility(postId: number, isHidden: boolean) {
+  const { supabase } = await requireAdmin();
+
+  const { error } = await supabase
+    .from("board_posts")
+    .update({ is_hidden: isHidden })
+    .eq("id", postId);
+
+  if (error) throw new Error("상태 변경에 실패했습니다.");
+  revalidatePath("/community");
+  revalidatePath("/admin/community");
+  return { is_hidden: isHidden };
+}
+
+export async function adminDeleteBoardPost(postId: number) {
+  const { supabase } = await requireAdmin();
+
+  const { data: post } = await supabase
+    .from("board_posts")
+    .select("image_url")
+    .eq("id", postId)
+    .single();
+
+  if (!post) throw new Error("글을 찾을 수 없습니다.");
+
+  if (post.image_url) {
+    const url = new URL(post.image_url);
+    const storagePath = url.pathname.split("/storage/v1/object/public/posts/")[1];
+    if (storagePath) {
+      await supabase.storage.from("posts").remove([decodeURIComponent(storagePath)]);
+    }
+  }
+
+  await supabase.from("board_posts").delete().eq("id", postId);
+  revalidatePath("/community");
+  revalidatePath("/admin/community");
+}

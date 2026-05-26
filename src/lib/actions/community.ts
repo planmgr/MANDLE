@@ -4,6 +4,36 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { extractTags } from "@/lib/utils/tags";
 
+// ===== SECURITY HELPERS =====
+
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_CAPTION_LENGTH = 2000;
+const MAX_COMMENT_LENGTH = 1000;
+const MAX_BOARD_TITLE_LENGTH = 100;
+const MAX_BOARD_BODY_LENGTH = 5000;
+
+function validateImage(file: File, maxSize: number) {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    throw new Error("허용되지 않는 파일 형식입니다. (JPG, PNG, WEBP, GIF만 가능)");
+  }
+  if (file.size > maxSize) {
+    throw new Error(`파일 크기가 너무 큽니다. (최대 ${maxSize / 1024 / 1024}MB)`);
+  }
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  const allowedExts = ["jpg", "jpeg", "png", "webp", "gif"];
+  if (!ext || !allowedExts.includes(ext)) {
+    throw new Error("허용되지 않는 파일 확장자입니다.");
+  }
+}
+
+function validateLength(value: string, maxLength: number, fieldName: string) {
+  if (value.length > maxLength) {
+    throw new Error(`${fieldName}은(는) ${maxLength}자를 초과할 수 없습니다.`);
+  }
+}
+
 export async function createPost(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -12,8 +42,12 @@ export async function createPost(formData: FormData) {
   const imageFile = formData.get("image") as File;
   const caption = formData.get("caption") as string;
 
+  if (!imageFile || imageFile.size === 0) throw new Error("이미지를 선택해주세요.");
+  validateImage(imageFile, MAX_IMAGE_SIZE);
+  if (caption) validateLength(caption, MAX_CAPTION_LENGTH, "캡션");
+
   // Upload image
-  const ext = imageFile.name.split(".").pop();
+  const ext = imageFile.name.split(".").pop()?.toLowerCase();
   const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
 
   const { error: uploadError } = await supabase.storage
@@ -104,6 +138,9 @@ export async function addComment(postId: number, content: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
 
+  if (!content?.trim()) throw new Error("댓글 내용을 입력해주세요.");
+  validateLength(content, MAX_COMMENT_LENGTH, "댓글");
+
   const { data, error } = await supabase
     .from("comments")
     .insert({ post_id: postId, user_id: user.id, content })
@@ -158,7 +195,8 @@ export async function updateProfile(formData: FormData) {
 
   // Upload avatar if provided
   if (avatarFile && avatarFile.size > 0) {
-    const ext = avatarFile.name.split(".").pop();
+    validateImage(avatarFile, MAX_AVATAR_SIZE);
+    const ext = avatarFile.name.split(".").pop()?.toLowerCase();
     const path = `${user.id}/avatar.${ext}`;
 
     const { error: uploadError } = await supabase.storage
@@ -226,11 +264,14 @@ export async function createBoardPost(formData: FormData) {
   const imageFile = formData.get("image") as File | null;
 
   if (!title || !body) throw new Error("제목과 본문을 입력해주세요.");
+  validateLength(title, MAX_BOARD_TITLE_LENGTH, "제목");
+  validateLength(body, MAX_BOARD_BODY_LENGTH, "본문");
 
   let imageUrl: string | null = null;
 
   if (imageFile && imageFile.size > 0) {
-    const ext = imageFile.name.split(".").pop();
+    validateImage(imageFile, MAX_IMAGE_SIZE);
+    const ext = imageFile.name.split(".").pop()?.toLowerCase();
     const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
@@ -303,6 +344,9 @@ export async function addBoardComment(postId: number, content: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
+
+  if (!content?.trim()) throw new Error("댓글 내용을 입력해주세요.");
+  validateLength(content, MAX_COMMENT_LENGTH, "댓글");
 
   const { data, error } = await supabase
     .from("board_comments")

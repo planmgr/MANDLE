@@ -82,6 +82,7 @@ export default function CreatePostDialog({ onClose }: CreatePostDialogProps) {
             onChange={(e) => setCaption(e.target.value)}
             placeholder="캡션을 입력하세요... #태그를 추가할 수 있습니다"
             rows={3}
+            maxLength={2000}
             className="w-full font-body text-[13px] text-fg-primary placeholder:text-fg-tertiary bg-transparent border border-border-light px-3 py-2.5 outline-none resize-none focus:border-fg-tertiary transition-colors"
           />
         </div>
