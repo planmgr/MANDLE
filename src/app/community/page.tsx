@@ -12,8 +12,6 @@ export const metadata: Metadata = {
 };
 import {
   getFeedPosts,
-  getPopularPosts,
-  getBookmarkedPosts,
   getBoardPosts,
 } from "@/lib/queries/community";
 import PageHeader from "@/components/ui/PageHeader";
@@ -22,8 +20,7 @@ import PostGrid from "@/components/community/PostGrid";
 import BoardPostList from "@/components/community/BoardPostList";
 import PopularTags from "@/components/community/PopularTags";
 import RecommendedUsers from "@/components/community/RecommendedUsers";
-import CreatePostButton from "@/components/community/CreatePostButton";
-import CreateBoardPostButton from "@/components/community/CreateBoardPostButton";
+import WritePrompt from "@/components/community/WritePrompt";
 import type { FeedTab } from "@/lib/types/community";
 
 interface CommunityPageProps {
@@ -32,7 +29,7 @@ interface CommunityPageProps {
 
 export default async function CommunityPage({ searchParams }: CommunityPageProps) {
   const params = await searchParams;
-  const tab = (params.tab ?? "feed") as FeedTab;
+  const tab = (params.tab ?? "mylook") as FeedTab;
   const tag = params.tag;
 
   let userId: string | undefined;
@@ -42,7 +39,7 @@ export default async function CommunityPage({ searchParams }: CommunityPageProps
     userId = data.user?.id;
   }
 
-  const isBoard = tab === "board";
+  const isBoard = tab === "talk" || tab === "item";
 
   return (
     <main>
@@ -56,11 +53,17 @@ export default async function CommunityPage({ searchParams }: CommunityPageProps
           <FeedTabs currentTab={tab} />
         </div>
 
+        {userId && (
+          <div className="mt-6">
+            <WritePrompt tab={tab} />
+          </div>
+        )}
+
         <div className="flex gap-8 mt-8 md:mt-10">
           {/* Content */}
           <div className="flex-1 min-w-0">
             {isBoard ? (
-              <BoardContent userId={userId} />
+              <BoardContent userId={userId} category={tab} />
             ) : (
               <FeedContent tab={tab} tag={tag} userId={userId} />
             )}
@@ -78,20 +81,12 @@ export default async function CommunityPage({ searchParams }: CommunityPageProps
         </div>
       </section>
 
-      {userId && (isBoard ? <CreateBoardPostButton /> : <CreatePostButton />)}
     </main>
   );
 }
 
 async function FeedContent({ tab, tag, userId }: { tab: FeedTab; tag?: string; userId?: string }) {
-  let posts;
-  if (tab === "popular") {
-    posts = await getPopularPosts(1, userId);
-  } else if (tab === "collections" && userId) {
-    posts = await getBookmarkedPosts(userId, 1);
-  } else {
-    posts = await getFeedPosts(1, userId, tag);
-  }
+  const posts = await getFeedPosts(1, userId, tag);
 
   return (
     <PostGrid
@@ -103,13 +98,14 @@ async function FeedContent({ tab, tag, userId }: { tab: FeedTab; tag?: string; u
   );
 }
 
-async function BoardContent({ userId }: { userId?: string }) {
-  const boardPosts = await getBoardPosts(1, userId);
+async function BoardContent({ userId, category }: { userId?: string; category: string }) {
+  const boardPosts = await getBoardPosts(1, userId, category);
 
   return (
     <BoardPostList
       initialPosts={boardPosts}
       currentUserId={userId}
+      category={category}
     />
   );
 }

@@ -74,7 +74,7 @@ export default function BoardPostDetailModal({ post, currentUserId, onClose }: B
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
-        className="bg-surface-primary w-full max-w-[640px] mx-4 flex flex-col max-h-[90vh]"
+        className="bg-surface-primary w-full max-w-[90vw] md:max-w-[720px] mx-4 flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -134,13 +134,13 @@ export default function BoardPostDetailModal({ post, currentUserId, onClose }: B
               {post.body}
             </p>
             {post.image_url && (
-              <div className="relative w-full h-[280px] bg-surface-card overflow-hidden mt-1">
+              <div className="relative w-full h-[250px] md:h-[400px] bg-surface-card overflow-hidden mt-1">
                 <Image
                   src={post.image_url}
                   alt={post.title}
                   fill
-                  className="object-cover"
-                  sizes="640px"
+                  className="object-contain"
+                  sizes="720px"
                 />
               </div>
             )}

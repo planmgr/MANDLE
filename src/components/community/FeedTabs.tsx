@@ -4,10 +4,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { FeedTab } from "@/lib/types/community";
 
 const TABS: { label: string; value: FeedTab }[] = [
-  { label: "FEED", value: "feed" },
-  { label: "POPULAR", value: "popular" },
-  { label: "COLLECTIONS", value: "collections" },
-  { label: "BOARD", value: "board" },
+  { label: "MY LOOK", value: "mylook" },
+  { label: "TALK", value: "talk" },
+  { label: "ITEM", value: "item" },
 ];
 
 interface FeedTabsProps {

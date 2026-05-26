@@ -34,7 +34,7 @@ export default async function MyPage({ searchParams }: MyPageProps) {
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("nickname, avatar_url, bio")
+    .select("nickname, avatar_url, bio, nickname_set_by_user")
     .eq("id", user.id)
     .single();
 
@@ -42,6 +42,7 @@ export default async function MyPage({ searchParams }: MyPageProps) {
   const avatarUrl = profile?.avatar_url ?? user.user_metadata?.avatar_url ?? null;
   const bio = profile?.bio ?? null;
   const displayName = nickname.toUpperCase();
+  const needsNicknameSetup = profile?.nickname_set_by_user === false;
 
   const stats = await getUserStats(user.id);
 
@@ -68,6 +69,7 @@ export default async function MyPage({ searchParams }: MyPageProps) {
           avatarUrl={avatarUrl}
           bio={bio}
           stats={stats}
+          needsNicknameSetup={needsNicknameSetup}
         />
       </section>
 
@@ -95,7 +97,7 @@ export default async function MyPage({ searchParams }: MyPageProps) {
         <PostGrid
           initialPosts={posts}
           currentUserId={user.id}
-          tab="feed"
+          tab="mylook"
         />
       </section>
     </main>

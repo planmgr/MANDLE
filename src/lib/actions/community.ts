@@ -172,7 +172,7 @@ export async function updateProfile(formData: FormData) {
   }
 
   // Update profiles table
-  const profileUpdate: Record<string, unknown> = { nickname, bio, updated_at: new Date().toISOString() };
+  const profileUpdate: Record<string, unknown> = { nickname, bio, updated_at: new Date().toISOString(), nickname_set_by_user: true };
   if (avatarUrl) profileUpdate.avatar_url = avatarUrl;
 
   const { error: profileError } = await supabase
@@ -222,6 +222,7 @@ export async function createBoardPost(formData: FormData) {
 
   const title = (formData.get("title") as string)?.trim();
   const body = (formData.get("body") as string)?.trim();
+  const category = (formData.get("category") as string)?.trim() || "talk";
   const imageFile = formData.get("image") as File | null;
 
   if (!title || !body) throw new Error("제목과 본문을 입력해주세요.");
@@ -244,7 +245,7 @@ export async function createBoardPost(formData: FormData) {
 
   const { error } = await supabase
     .from("board_posts")
-    .insert({ user_id: user.id, title, body, image_url: imageUrl });
+    .insert({ user_id: user.id, title, body, image_url: imageUrl, category });
 
   if (error) throw new Error("글 작성에 실패했습니다.");
 

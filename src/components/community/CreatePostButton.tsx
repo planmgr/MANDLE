@@ -11,7 +11,7 @@ export default function CreatePostButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-20 md:bottom-6 right-6 z-40 w-12 h-12 bg-fg-primary text-fg-inverse flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity"
+        className="fixed bottom-20 md:bottom-8 right-6 z-40 w-14 h-14 rounded-full bg-fg-primary text-fg-inverse flex items-center justify-center shadow-xl hover:scale-105 hover:opacity-90 transition-all"
         aria-label="게시글 작성"
       >
         <Plus size={20} />

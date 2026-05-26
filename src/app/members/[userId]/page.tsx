@@ -193,7 +193,7 @@ export default async function MemberDetailPage({ params }: MemberDetailPageProps
           <PostGrid
             initialPosts={posts}
             currentUserId={currentUserId}
-            tab="feed"
+            tab="mylook"
           />
         </div>
       </section>

@@ -70,11 +70,11 @@ export default function PostDetailModal({ post, currentUserId, onClose }: PostDe
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
-        className="bg-surface-primary w-full max-w-[900px] mx-4 flex flex-col md:flex-row max-h-[90vh]"
+        className="bg-surface-primary w-[95vw] md:w-[90vw] md:max-w-[1100px] mx-4 flex flex-col md:flex-row h-[85vh] md:h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Image */}
-        <div className="relative w-full md:w-[55%] h-[300px] md:h-auto min-h-[300px] bg-surface-card shrink-0">
+        <div className="relative w-full md:w-[60%] h-[300px] md:h-auto bg-surface-card shrink-0">
           <Image
             src={post.image_url}
             alt={post.caption ?? "Post"}

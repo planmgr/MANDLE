@@ -234,16 +234,23 @@ const BOARD_PAGE_SIZE = 15;
 
 export async function getBoardPosts(
   page: number,
-  userId?: string
+  userId?: string,
+  category?: string
 ): Promise<BoardPost[]> {
   const supabase = await createClient();
   const from = (page - 1) * BOARD_PAGE_SIZE;
 
-  const { data: posts } = await supabase
+  let query = supabase
     .from("board_posts")
     .select("*, profiles!board_posts_user_id_fkey(*)")
     .order("created_at", { ascending: false })
     .range(from, from + BOARD_PAGE_SIZE - 1);
+
+  if (category) {
+    query = query.eq("category", category);
+  }
+
+  const { data: posts } = await query;
 
   if (!posts) return [];
   return attachBoardLikes(supabase, posts as BoardPost[], userId);

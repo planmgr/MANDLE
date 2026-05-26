@@ -17,6 +17,7 @@ interface ProfileHeaderProps {
     followersCount: number;
     followingCount: number;
   };
+  needsNicknameSetup?: boolean;
 }
 
 export default function ProfileHeader({
@@ -26,6 +27,7 @@ export default function ProfileHeader({
   avatarUrl,
   bio,
   stats,
+  needsNicknameSetup,
 }: ProfileHeaderProps) {
   const [showEdit, setShowEdit] = useState(false);
   const router = useRouter();
@@ -37,6 +39,25 @@ export default function ProfileHeader({
 
   return (
     <>
+      {needsNicknameSetup && !showEdit && (
+        <div className="mb-6 p-5 border border-border-light bg-surface-card flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex-1">
+            <h3 className="font-heading text-[14px] tracking-[1.5px] text-fg-primary mb-1">
+              SET YOUR NICKNAME
+            </h3>
+            <p className="font-body text-[13px] text-fg-secondary leading-[1.6]">
+              커뮤니티에서 사용할 닉네임을 설정해주세요.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowEdit(true)}
+            className="shrink-0 px-5 py-2.5 bg-fg-primary text-fg-inverse font-caption text-[11px] font-medium tracking-[2px] hover:opacity-90 transition-opacity"
+          >
+            SET NICKNAME
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10">
         <div className="relative w-[100px] h-[100px] md:w-[120px] md:h-[120px] rounded-full overflow-hidden shrink-0 bg-surface-card">
           {avatarUrl ? (

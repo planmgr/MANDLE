@@ -10,6 +10,18 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("nickname_set_by_user")
+          .eq("id", user.id)
+          .single();
+
+        if (profile && !profile.nickname_set_by_user) {
+          return NextResponse.redirect(`${origin}/my?setup=nickname`);
+        }
+      }
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

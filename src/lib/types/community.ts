@@ -73,4 +73,4 @@ export interface TopMember {
   profiles: Profile;
 }
 
-export type FeedTab = "feed" | "popular" | "collections" | "board";
+export type FeedTab = "mylook" | "talk" | "item";

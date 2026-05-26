@@ -7,9 +7,10 @@ import { createBoardPost } from "@/lib/actions/community";
 
 interface CreateBoardPostDialogProps {
   onClose: () => void;
+  category?: string;
 }
 
-export default function CreateBoardPostDialog({ onClose }: CreateBoardPostDialogProps) {
+export default function CreateBoardPostDialog({ onClose, category }: CreateBoardPostDialogProps) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
@@ -35,6 +36,7 @@ export default function CreateBoardPostDialog({ onClose }: CreateBoardPostDialog
       const formData = new FormData();
       formData.append("title", title.trim());
       formData.append("body", body.trim());
+      if (category) formData.append("category", category);
       const file = fileRef.current?.files?.[0];
       if (file) formData.append("image", file);
 

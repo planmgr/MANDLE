@@ -8,9 +8,10 @@ import type { BoardPost } from "@/lib/types/community";
 interface BoardPostListProps {
   initialPosts: BoardPost[];
   currentUserId?: string;
+  category?: string;
 }
 
-export default function BoardPostList({ initialPosts, currentUserId }: BoardPostListProps) {
+export default function BoardPostList({ initialPosts, currentUserId, category }: BoardPostListProps) {
   const [posts, setPosts] = useState(initialPosts);
   const [page, setPage] = useState(2);
   const [hasMore, setHasMore] = useState(initialPosts.length >= 15);
@@ -31,7 +32,7 @@ export default function BoardPostList({ initialPosts, currentUserId }: BoardPost
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/community/posts?tab=board&page=${page}`);
+      const res = await fetch(`/api/community/posts?tab=${category || "talk"}&page=${page}`);
       const newPosts: BoardPost[] = await res.json();
 
       if (newPosts.length < 15) setHasMore(false);
