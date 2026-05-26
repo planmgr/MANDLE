@@ -41,6 +41,27 @@ export default function RootLayout({
       lang="ko"
       className={`${inter.variable} ${geist.variable} antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.addEventListener('error', function(e) {
+                if (e.filename && (e.filename.includes('chrome-extension://') || e.filename.includes('moz-extension://'))) {
+                  e.stopImmediatePropagation();
+                  e.preventDefault();
+                }
+              }, true);
+              window.addEventListener('unhandledrejection', function(e) {
+                var reason = (e.reason && e.reason.message) || String(e.reason || '');
+                if (reason.includes('chrome-extension://') || reason.includes('moz-extension://') || reason.includes('MetaMask')) {
+                  e.stopImmediatePropagation();
+                  e.preventDefault();
+                }
+              }, true);
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-screen flex flex-col pb-14 md:pb-0">
         <NavBar />
         {children}

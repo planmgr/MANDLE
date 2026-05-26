@@ -41,7 +41,8 @@ export default function FounderSection() {
               </p>
               <p className="font-body text-[14px] md:text-[15px] text-fg-muted leading-[1.8] max-w-[520px]">
                 나만의 스타일을 설계하는 남자들.
-                단점이 아닌 장점으로 존재감을 찾는 사람들,<br/>
+                단점이 아닌 장점으로 존재감을 찾는 사람들,
+                <br/>
                 이곳은 그런 사람들을 위한 플랫폼입니다.
               </p>
             </div>
